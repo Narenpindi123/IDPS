@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDS Dashboard</title>
+</head>
+<body>
+    <h1>Intrusion Detection System Dashboard</h1>
+    <table border="1">
+        <tr>
+            <th>Timestamp</th>
+            <th>Activity</th>
+            <th>Source IP</th>
+            <th>Destination Port</th>
+        </tr>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.timestamp }}</td>
+            <td>{{ log.activity }}</td>
+            <td>{{ log.source_ip }}</td>
+            <td>{{ log.destination_port }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
