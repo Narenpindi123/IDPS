@@ -1,3 +1,5 @@
+Download the readme.md file and view it in vs editor to see it as i am intended it to be
+ 
  Intrusion Detection System (IDS) with Python and Flask
 Overview
 This project is a simple Intrusion Detection System (IDS) built in Python that detects SYN flood attacks. It logs detected intrusions, displays them on a web dashboard using Flask, and can send email alerts for suspicious activities. The IDS can also automatically block malicious IPs by modifying firewall rules with `iptables`.
