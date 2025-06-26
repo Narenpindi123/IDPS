@@ -87,9 +87,3 @@ ________________________________________
 Feel free to contribute and open issues to improve this project!
 
 ---
-
-Instructions for Use
-
-1. Copy the content above and save it as `README.md` in your project directory.
-2. Replace `URL-to-image` with links to screenshots of your web dashboard and console output if you'd like to include visuals on GitHub.
-3. Customize the sections as needed for your specific setup or requirements.
