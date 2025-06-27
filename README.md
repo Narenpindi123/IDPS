@@ -1,63 +1,78 @@
-Intrusion Detection System (IDS) – SYN Flood Detection
+# 🛡️ Intrusion Detection System (IDS) – SYN Flood Detection
 
-This Python-based IDS detects SYN flood attacks in real time. It monitors network traffic using Scapy, logs detected events, sends email alerts, blocks attacker IPs via iptables, and provides a Flask web dashboard to view and download logs.
+A Python-based IDS that monitors real-time network traffic to detect SYN-flood attacks.  
+It logs events, sends email alerts, blocks attacker IPs with `iptables`, and displays everything on a Flask dashboard.
 
-Features:
+---
 
-Detects SYN flood attacks using Scapy
+## 🚀 Features
+- **SYN Flood Detection** using **Scapy**  
+- **Flask Dashboard** for live attack logs  
+- **Email Alerts** when an attack is detected  
+- **Automatic IP Blocking** via `iptables`  
+- **JSON Log Storage** (`intrusion_log.json`)  
+- **Trusted IP Whitelist** (e.g. `127.0.0.1`)  
 
-Live attack logs via a Flask web dashboard
+---
 
-Sends email alerts upon detection
+## 🧠 How It Works
+1. **Capture**: Scapy listens for TCP SYN packets on your chosen interface.  
+2. **Detect**: If one IP sends more than _N_ SYNs in a short time:  
+   - Log the event (timestamp, source IP, destination port)  
+   - Send an email alert  
+   - Block the IP with `iptables`  
+3. **Display**: Flask serves a web dashboard at `http://127.0.0.1:5000` showing all events and offering JSON download.
 
-Automatically blocks attacker IPs with iptables
+---
 
-Stores events in a JSON log file
+## 📁 Project Structure
+IDS/
+├── ids_main.py # Main detection & web-server script
+├── config.ini # Email & threshold settings
+├── templates/
+│ └── dashboard.html # Flask dashboard template
+└── static/
+└── intrusion_log.json # Logged attack events
 
-Whitelists trusted IPs (for example, 127.0.0.1)
+---
 
-How It Works:
+## ⚙️ Installation & Setup
 
-Scapy captures TCP SYN packets on the chosen network interface.
-
-If a single source IP sends more than the configured SYN threshold in a short period:
-a. The event (timestamp, source IP, destination port) is appended to intrusion_log.json
-b. An email alert is sent to the configured receiver
-c. The source IP is blocked using an iptables DROP rule
-
-A Flask application serves a dashboard at http://127.0.0.1:5000 where all logged events are displayed and can be downloaded as JSON.
-
-Setup:
-
-Install required Python packages by running:
-pip install flask scapy
-
-Create a file named config.ini in the project root with these contents:
+1. **Install dependencies**  
+   ```bash
+   pip install flask scapy
+2. Create config.ini in the project root:
 [EMAIL]
-sender = your_email@gmail.com
-password = your_app_specific_password
+sender   = your_email@gmail.com
+password = your_app_password
 receiver = your_email@gmail.com
 
 [DETECTION]
 syn_flood_threshold = 10
-alert_rate_limit = 60
-block_threshold = 20
-
-Start the IDS by running:
+alert_rate_limit    = 60
+block_threshold     = 20
+3. Run the IDS
 sudo python3 ids_main.py
+4. Access the dashboard
+Open in your browser: http://127.0.0.1:5000
 
-Open your browser and navigate to:
-http://127.0.0.1:5000
-
-Testing a SYN Flood:
-From another machine on the same network, simulate an attack with:
+🧪 Simulate a SYN Flood
+On a second machine (same network), run:
 sudo hping3 -S -p 5000 -a 192.168.1.99 --flood 10.0.2.15
-(Replace 192.168.1.99 with your attacker IP and 10.0.2.15 with the IDS host IP.)
+-S sends SYN packets
 
-Cleanup:
+-p 5000 targets the Flask port
 
-Stop the flood attack process: sudo pkill hping3
+-a spoofs the attacker IP
 
-Remove the JSON log file: sudo rm static/intrusion_log.json
+10.0.2.15 is your IDS host
+Cleanup & Reset
+Stop attack:
 
-Flush all iptables rules: sudo iptables -F
+sudo pkill hping3
+Clear logs:
+
+sudo rm static/intrusion_log.json
+Flush firewall rules:
+
+sudo iptables -F
