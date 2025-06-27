@@ -19,6 +19,9 @@ SYN_FLOOD_THRESHOLD = int(config['detection']['syn_flood_threshold'])
 ALERT_RATE_LIMIT = int(config['detection']['alert_rate_limit'])
 BLOCK_THRESHOLD = int(config['detection']['block_threshold'])
 
+# Whitelist IPs to NEVER block/log
+WHITELIST_IPS = {"127.0.0.1", "10.0.2.15"}
+
 # Log file setup
 LOG_FILE = "static/intrusion_log.json"
 if not os.path.exists("static"):
@@ -44,7 +47,7 @@ syn_flood_tracker = {}
 last_email_sent = {}
 blocked_ips = set()
 
-# Logging function
+# Log intrusion to file
 def log_intrusion(activity, packet):
     log_entry = {
         "activity": activity,
@@ -60,10 +63,9 @@ def log_intrusion(activity, packet):
             json.dump(logs, f, indent=2)
     except Exception:
         pass
-    # Minimal terminal output to avoid flood
-    print(f"Logged: {log_entry['activity']} at {log_entry['timestamp']}")
+    print(f"🔐 Logged: {log_entry['activity']} at {log_entry['timestamp']}")
 
-# Send email with rate limiting
+# Send email alert
 def send_email_alert(activity, packet):
     src_ip = packet[IP].src
     now = time.time()
@@ -86,21 +88,24 @@ def send_email_alert(activity, packet):
     except Exception as e:
         print(f"Email failed: {e}")
 
-# Block IP only once
+# Block IP using iptables
 def block_ip(ip):
     if ip not in blocked_ips:
         os.system(f"sudo iptables -A INPUT -s {ip} -j DROP")
         blocked_ips.add(ip)
         print(f"⛔ Blocked IP: {ip}")
 
-# Intrusion detection logic
+# Main detection logic
 def detect_intrusion(packet):
     if packet.haslayer(TCP) and packet.haslayer(IP):
         src_ip = packet[IP].src
+        if src_ip in WHITELIST_IPS:
+            print(f"🟡 Ignored trusted IP: {src_ip}")
+            return
+
         if packet[TCP].flags == "S":
             syn_flood_tracker[src_ip] = syn_flood_tracker.get(src_ip, 0) + 1
 
-            # Add a minimal delay to reduce excessive alerts
             if time.time() - last_email_sent.get(src_ip, 0) < 10:
                 return
 
@@ -111,12 +116,17 @@ def detect_intrusion(packet):
                 if syn_flood_tracker[src_ip] >= BLOCK_THRESHOLD:
                     block_ip(src_ip)
 
-# Start packet sniffing (on loopback interface)
+# Sniffing thread
 def start_sniffing():
     print("✅ IDS is monitoring traffic on interface: lo")
     sniff(prn=detect_intrusion, iface="lo", store=0)
 
-# Launch IDS + Web
+# Start web + IDS
 if __name__ == "__main__":
     threading.Thread(target=start_sniffing).start()
     app.run(host="0.0.0.0", port=5000)
+
+
+syn_flood_tracker.clear()
+last_email_sent.clear()
+blocked_ips.clear()
