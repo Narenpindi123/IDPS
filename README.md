@@ -45,7 +45,7 @@ This project implements a Python-based IDS that detects SYN flood attacks in rea
 
 <p align="center">
   <strong>🌊 SYN Flood Command</strong><br>
-  <img src="screenshots/Flood_attack.png" alt="SYN Flood Command" width="700">
+  <img src="screenshots/Flood_Attack.png" alt="SYN Flood Command" width="700">
 </p>
 
 <p align="center">
