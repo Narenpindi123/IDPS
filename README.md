@@ -1,78 +1,54 @@
-# 🛡️ Intrusion Detection System (IDS) – SYN Flood Detection
+# 🔐 Intrusion Detection System (IDS)
 
-A Python-based IDS that monitors real-time network traffic to detect SYN-flood attacks.  
-It logs events, sends email alerts, blocks attacker IPs with `iptables`, and displays everything on a Flask dashboard.
+This project implements a Python-based IDS that detects SYN flood attacks in real time. It logs detected events, sends email alerts, blocks attacker IPs via `iptables`, and displays everything on a Flask web dashboard.
 
----
+## ⚙️ Features
 
-## 🚀 Features
-- **SYN Flood Detection** using **Scapy**  
-- **Flask Dashboard** for live attack logs  
-- **Email Alerts** when an attack is detected  
-- **Automatic IP Blocking** via `iptables`  
-- **JSON Log Storage** (`intrusion_log.json`)  
-- **Trusted IP Whitelist** (e.g. `127.0.0.1`)  
+- Real-time SYN‐flood detection using **Scapy**  
+- Live attack logs via a **Flask** dashboard  
+- Email alerts when an attack is detected  
+- Automatic IP blocking with **iptables**  
+- JSON log storage (`intrusion_log.json`)  
+- Trusted IP whitelist (e.g. `127.0.0.1`)  
 
----
+## 🛠️ Tech Stack
 
-## 🧠 How It Works
+- **Python 3**  
+- **Flask** (web framework)  
+- **Scapy** (packet sniffing)  
+- **iptables** (firewall rules)  
+- **smtplib** (SMTP email alerts)  
+- **JSON** (log persistence)  
+
+## 🚀 How It Works
+
 1. **Capture**: Scapy listens for TCP SYN packets on your chosen interface.  
-2. **Detect**: If one IP sends more than _N_ SYNs in a short time:  
-   - Log the event (timestamp, source IP, destination port)  
-   - Send an email alert  
-   - Block the IP with `iptables`  
-3. **Display**: Flask serves a web dashboard at `http://127.0.0.1:5000` showing all events and offering JSON download.
+2. **Detect**: If one source IP sends more than the configured SYN threshold in a short window:  
+   - Append a log entry (timestamp, source IP, destination port) to `intrusion_log.json`  
+   - Send an email alert to the configured recipient  
+   - Block the source IP with an `iptables DROP` rule  
+3. **Display**: A Flask app at `http://127.0.0.1:5000` shows all logged events and lets you download the JSON log.  
 
----
+## 🛡️ Security Considerations
 
-## 📁 Project Structure
-IDS/
-├── ids_main.py # Main detection & web-server script
-├── config.ini # Email & threshold settings
-├── templates/
-│ └── dashboard.html # Flask dashboard template
-└── static/
-└── intrusion_log.json # Logged attack events
+- Must run with **root** privileges (for raw sockets and firewall control)  
+- Use **app‐specific SMTP passwords** for email alerts (Gmail, etc.)  
+- Whitelist only trusted management IPs to avoid self‐blocking  
+- Test in a **controlled environment** to prevent unintended network disruption  
 
----
+## 📸 Screenshots
 
-## ⚙️ Installation & Setup
+### 🔹 IDS Dashboard (Welcome)  
+![Welcome](Screenshots/Welcome.png)
 
-1. **Install dependencies**  
-   ```bash
-   pip install flask scapy
-2. Create config.ini in the project root:
-[EMAIL]
-sender   = your_email@gmail.com
-password = your_app_password
-receiver = your_email@gmail.com
+### 🖥️ Terminal Log During Attack  
+![Terminal Log](Screenshots/Attack_terminal.png)
 
-[DETECTION]
-syn_flood_threshold = 10
-alert_rate_limit    = 60
-block_threshold     = 20
-3. Run the IDS
-sudo python3 ids_main.py
-4. Access the dashboard
-Open in your browser: http://127.0.0.1:5000
+### 📊 Dashboard Showing Detected Attack  
+![Attack Detected](Screenshots/Dashboard_attack.png)
 
-🧪 Simulate a SYN Flood
-On a second machine (same network), run:
-sudo hping3 -S -p 5000 -a 192.168.1.99 --flood 10.0.2.15
--S sends SYN packets
+### 📧 Email Alert Received  
+![Email Alert](Screenshots/Email_alert.jpg)
 
--p 5000 targets the Flask port
-
--a spoofs the attacker IP
-
-10.0.2.15 is your IDS host
-Cleanup & Reset
-Stop attack:
-
-sudo pkill hping3
-Clear logs:
-
-sudo rm static/intrusion_log.json
-Flush firewall rules:
-
-sudo iptables -F
+### 🧹 Dashboard After Clearing Logs  
+![Cleared Dashboard](Screenshots/Cleared_dashboard.png)
