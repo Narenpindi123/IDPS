@@ -81,7 +81,6 @@
   <hr>
 
   <h2>⚙️ Setup Instructions</h2>
-  
   <ol>
     <li>
       <strong>Install dependencies:</strong><br>
