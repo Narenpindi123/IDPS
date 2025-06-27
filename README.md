@@ -60,5 +60,5 @@ This project implements a Python-based IDS that detects SYN flood attacks in rea
 
 <p align="center">
   <strong>📧 Email Alert Notification</strong><br>
-  <img src="screenshots/email.jpg" alt="Email Alert Notification" width="500">
+  <img src="screenshots/Email.jpg" alt="Email Alert Notification" width="500">
 </p>
