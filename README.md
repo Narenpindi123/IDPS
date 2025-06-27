@@ -38,18 +38,27 @@ This project implements a Python-based IDS that detects SYN flood attacks in rea
 
 ## 📸 Screenshots
 
-### 🔹 IDS Dashboard (Welcome)  
-![Welcome](screenshots/welcome.png)
+<p align="center">
+  <strong>🖥️ IDS Dashboard (No Logs)</strong><br>
+  <img src="screenshots/welcome.png" alt="IDS Dashboard (No Logs)" width="700">
+</p>
 
-### 🌊 Flood Attack 
-![Cleared Dashboard](screenshots/Flood_Attack.png)
+<p align="center">
+  <strong>🌊 SYN Flood Command</strong><br>
+  <img src="screenshots/flood_attack.png" alt="SYN Flood Command" width="700">
+</p>
 
-### 🖥️ Terminal Log During Attack  
-![Terminal Log](screenshots/Attack_in_terminal_log.png)
+<p align="center">
+  <strong>📟 Terminal Log Output</strong><br>
+  <img src="screenshots/attack_in_terminal_log.png" alt="Terminal Log Output" width="700">
+</p>
 
-### 📊 Dashboard Showing Detected Attack  
-![Attack Detected](screenshots/attack.png)
+<p align="center">
+  <strong>📊 IDS Dashboard (Attack Detected)</strong><br>
+  <img src="screenshots/attack.png" alt="IDS Dashboard (Attack Detected)" width="700">
+</p>
 
-### 📧 Email Alert Received  
-![Email Alert](screenshots/Email.jpg)
-
+<p align="center">
+  <strong>📧 Email Alert Notification</strong><br>
+  <img src="screenshots/email.jpg" alt="Email Alert Notification" width="500">
+</p>
