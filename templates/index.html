@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>IDS Dashboard</title>
+    <meta http-equiv="refresh" content="10">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f7fa;
+            background-color: #f3f4f6;
             margin: 0;
             padding: 20px;
         }
@@ -15,28 +16,48 @@
             color: #333;
         }
         table {
-            margin: auto;
+            margin: 20px auto;
             border-collapse: collapse;
             width: 90%;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            text-align: center;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         th {
             background-color: #007acc;
-            color: #fff;
+            color: white;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
         }
         tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: #f0f0f0;
+        }
+        .download {
+            text-align: center;
+            margin: 20px;
+        }
+        .download button {
+            padding: 10px 20px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <h1>Intrusion Detection System Dashboard</h1>
+
+    <div class="download">
+        <a href="/static/intrusion_log.json" download>
+            <button>Download Logs (JSON)</button>
+        </a>
+    </div>
+
     <table>
         <tr>
             <th>Timestamp</th>
@@ -44,14 +65,20 @@
             <th>Source IP</th>
             <th>Destination Port</th>
         </tr>
-        {% for log in logs %}
-        <tr>
-            <td>{{ log.timestamp }}</td>
-            <td>{{ log.activity }}</td>
-            <td>{{ log.source_ip }}</td>
-            <td>{{ log.destination_port }}</td>
-        </tr>
-        {% endfor %}
+        {% if logs %}
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.activity }}</td>
+                <td>{{ log.source_ip }}</td>
+                <td>{{ log.destination_port }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="4">No intrusion logs yet. Monitoring in progress...</td>
+            </tr>
+        {% endif %}
     </table>
 </body>
 </html>
