@@ -1,60 +1,53 @@
-Intrusion Detection System (IDS) – SYN Flood Detection
+# 🛡️ Intrusion Detection System (IDS) – SYN Flood Detection
 
-This is a Python-based IDS that detects SYN flood attacks in real time. It monitors network traffic using Scapy, logs detected attacks, sends email alerts, blocks attacker IPs using iptables, and displays logs on a Flask-based web dashboard.
+This Python-based IDS monitors real-time network traffic to detect SYN flood attacks. It uses **Scapy** to analyze packets, **Flask** to display logs in a web interface, and **iptables** to block attacker IPs. Email alerts are also sent when an attack is detected.
 
-Features:
+---
 
-Detects SYN flood attacks using Scapy
+## 🚀 Features
 
-Flask web dashboard for live attack logs
+- ✅ Detects SYN flood attacks using **Scapy**
+- 🌐 Live attack logs via a **Flask web dashboard**
+- 📧 Sends **email alerts** upon detection
+- 🔒 Automatically **blocks attacker IPs** using iptables
+- 📁 Downloads logs in **JSON format**
+- 🧾 Ignores trusted IPs like `127.0.0.1`
 
-Sends email alerts on detection
+---
 
-Blocks attacker IP with iptables
+## ⚙️ How It Works
 
-Downloads logs in JSON format
+1. Scapy monitors network packets.
+2. If multiple SYN packets come from the same IP quickly, it’s flagged as an attack.
+3. The system:
+   - Logs the attack in a JSON file
+   - Sends an email alert
+   - Blocks the attacker IP via iptables
+4. The Flask dashboard displays all detected events and allows log download.
 
-Ignores trusted IPs like 127.0.0.1
+---
 
-How It Works:
-Scapy captures packets on the network interface. If multiple SYN packets are detected from the same IP in a short time, the system logs it, sends an email alert, and blocks that IP using iptables. The Flask dashboard shows all activity and allows log downloads.
+## 🗂️ Project Structure
 
-Project Structure:
 IDS/
-├── ids_main.py
-├── config.ini
-├── templates/dashboard.html
-└── static/intrusion_log.json
+├── ids_main.py # Main detection and web server logic
+├── config.ini # Email configuration file
+├── templates/
+│ └── dashboard.html # HTML template for the dashboard
+└── static/
+└── intrusion_log.json # Stored attack logs
 
-Setup:
+---
 
-Install dependencies: pip install flask scapy
+## 🧪 Setup Instructions
 
-Create a config.ini file with the following:
+1. **Install dependencies**
+
+```bash
+pip install flask scapy
+2. **Create a config.ini file**
 [EMAIL]
 sender = your_email@gmail.com
 password = your_email_app_password
 receiver = your_email@gmail.com
-
-Run the IDS: sudo python3 ids_main.py
-
-Open your browser and go to: http://127.0.0.1:5000
-
-Simulate a SYN Flood Attack:
-Use the following command from another system:
-sudo hping3 -S -p 5000 -a 192.168.1.99 --flood 10.0.2.15
-
-Reset or Cleanup:
-
-Stop any hping3 process: sudo pkill hping3
-
-Delete logs: sudo rm static/intrusion_log.json
-
-Clear firewall rules: sudo iptables -F
-
-Email Alert Sample:
-Subject: IDS Alert
-Body: Alert: SYN flood from 192.168.1.99 from 192.168.1.99
-
-License:
-MIT License – For educational use only
+📌 Use an app-specific password if you're using Gmail.
