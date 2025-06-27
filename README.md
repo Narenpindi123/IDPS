@@ -1,89 +1,60 @@
-Download the readme.md file and view it in vs editor to see it as i am intended it to be
- 
- Intrusion Detection System (IDS) with Python and Flask
-Overview
-This project is a simple Intrusion Detection System (IDS) built in Python that detects SYN flood attacks. It logs detected intrusions, displays them on a web dashboard using Flask, and can send email alerts for suspicious activities. The IDS can also automatically block malicious IPs by modifying firewall rules with `iptables`.
-Features
-- Real-time Packet Sniffing: Monitors incoming network traffic to detect SYN flood attacks.
-- SYN Flood Detection: Detects SYN flood attacks based on a configurable threshold.
-- IP Blocking: Automatically blocks IPs involved in SYN flood attacks using `iptables`.
-- Email Alerts: Sends email alerts for detected intrusions (configurable).
-- Web Dashboard: Displays intrusion logs on a real-time web dashboard built with Flask.
-- JSON Logging: Logs intrusion details in a JSON format for easy parsing and analysis.
+Intrusion Detection System (IDS) – SYN Flood Detection
 
-Requirements
-- Python 3
-- scapy - for packet sniffing and network analysis
-- flask - for web dashboard
-- hping3 (for testing purposes) - for generating SYN flood traffic
-- iptables (for IP blocking on Linux systems)
+This is a Python-based IDS that detects SYN flood attacks in real time. It monitors network traffic using Scapy, logs detected attacks, sends email alerts, blocks attacker IPs using iptables, and displays logs on a Flask-based web dashboard.
 
-Python Libraries
-Install required libraries:
-pip install scapy flask
+Features:
 
-Configuration
-Create a config.ini file in the project directory to specify email settings and detection thresholds.
-Example config.ini:
-ini
-[email]
-sender = your_email@example.com
-receiver = alertreceiver@example.com
-password = your_password
+Detects SYN flood attacks using Scapy
 
-[detection]
-syn_flood_threshold = 10  # Number of SYN packets to detect a flood
-alert_rate_limit = 60     # Minimum time (seconds) between email alerts for the same IP
-block_threshold = 20      # Number of SYN packets to trigger IP blocking
-Usage
-Running the IDS
-1.	Start the IDS:
-Cmd: sudo python3 ids_main.py
-The IDS will:
-o	Start sniffing for network packets.
-o	Detect SYN flood attacks based on the threshold set in config.ini.
-o	Log intrusions to intrusion_log.json.
-o	Start a Flask web server to display intrusion logs.
-2.	Access the Web Dashboard:
-Open a web browser and navigate to:
-arduino
-http://127.0.0.1:5000
-This will display a dashboard showing recent intrusion events.
-Testing SYN Flood Detection
-To simulate a SYN flood attack (for testing purposes only), use hping3 from another terminal:
-Cmd: sudo hping3 -S -p 80 --flood <target_ip>
-Replace <target_ip> with the IP address of the machine running the IDS.
-Stopping SYN Flood Testing
-To stop the SYN flood attack, press Ctrl + C in the terminal running hping3.
-Alternatively, if hping3 is running as a background process, you can find and kill it with:
-Cmd: ps aux | grep hping3
-sudo kill <PID>
+Flask web dashboard for live attack logs
+
+Sends email alerts on detection
+
+Blocks attacker IP with iptables
+
+Downloads logs in JSON format
+
+Ignores trusted IPs like 127.0.0.1
+
+How It Works:
+Scapy captures packets on the network interface. If multiple SYN packets are detected from the same IP in a short time, the system logs it, sends an email alert, and blocks that IP using iptables. The Flask dashboard shows all activity and allows log downloads.
+
 Project Structure:
-├── ids_main.py          # Main IDS code
-├── config.ini           # Configuration file for email and detection settings
-├── intrusion_log.json   # JSON file where detected intrusions are logged
-├── README.md            # Documentation file
-└── templates/
-    └── index.html       # HTML template for the web dashboard
-How It Works
-1.	Packet Sniffing: The IDS uses scapy to capture incoming packets and analyzes TCP flags to identify SYN packets.
-2.	SYN Flood Detection: When the number of SYN packets from a single IP exceeds the threshold, the IDS logs the activity and sends an email alert if configured.
-3.	IP Blocking: If the SYN flood threshold continues to increase, the IDS can automatically block the source IP with iptables.
-4.	Web Dashboard: Logs are displayed in real-time on a Flask-based web dashboard.
-Screenshots
-Web Dashboard
-Console Output
-Notes
-•	Running as Root: Because scapy requires low-level network access, the IDS must be run with root privileges.
-•	Testing: SYN flood attacks can disrupt network services. Run tests in a controlled environment and do not target external networks.
-•	Security: This IDS is for educational purposes. In production, a more robust solution like a firewall or a dedicated IDS/IPS is recommended.
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
-Acknowledgments
-•	Built with scapy for packet sniffing and network analysis.
-•	Flask for creating the web dashboard.
-•	iptables for firewall rules and IP blocking on Linux.
-________________________________________
-Feel free to contribute and open issues to improve this project!
+IDS/
+├── ids_main.py
+├── config.ini
+├── templates/dashboard.html
+└── static/intrusion_log.json
 
----
+Setup:
+
+Install dependencies: pip install flask scapy
+
+Create a config.ini file with the following:
+[EMAIL]
+sender = your_email@gmail.com
+password = your_email_app_password
+receiver = your_email@gmail.com
+
+Run the IDS: sudo python3 ids_main.py
+
+Open your browser and go to: http://127.0.0.1:5000
+
+Simulate a SYN Flood Attack:
+Use the following command from another system:
+sudo hping3 -S -p 5000 -a 192.168.1.99 --flood 10.0.2.15
+
+Reset or Cleanup:
+
+Stop any hping3 process: sudo pkill hping3
+
+Delete logs: sudo rm static/intrusion_log.json
+
+Clear firewall rules: sudo iptables -F
+
+Email Alert Sample:
+Subject: IDS Alert
+Body: Alert: SYN flood from 192.168.1.99 from 192.168.1.99
+
+License:
+MIT License – For educational use only
