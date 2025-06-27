@@ -1,5 +1,4 @@
 import threading
-import logging
 import json
 import os
 import time
@@ -13,7 +12,6 @@ from flask import Flask, render_template
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# Configurations from config.ini
 SENDER_EMAIL = config['email']['sender']
 RECEIVER_EMAIL = config['email']['receiver']
 SENDER_PASSWORD = config['email']['password']
@@ -21,56 +19,64 @@ SYN_FLOOD_THRESHOLD = int(config['detection']['syn_flood_threshold'])
 ALERT_RATE_LIMIT = int(config['detection']['alert_rate_limit'])
 BLOCK_THRESHOLD = int(config['detection']['block_threshold'])
 
-# Initialize JSON log file with an empty array if it doesn't exist or is empty
-if not os.path.exists("intrusion_log.json") or os.stat("intrusion_log.json").st_size == 0:
-    with open("intrusion_log.json", "w") as log_file:
-        json.dump([], log_file)  # Write an empty list to make it valid JSON
+# Whitelist IPs to NEVER block/log
+WHITELIST_IPS = {"127.0.0.1", "10.0.2.15"}
 
-# Set up Flask app for web dashboard
+# Log file setup
+LOG_FILE = "static/intrusion_log.json"
+if not os.path.exists("static"):
+    os.mkdir("static")
+if not os.path.exists(LOG_FILE) or os.stat(LOG_FILE).st_size == 0:
+    with open(LOG_FILE, "w") as f:
+        json.dump([], f)
+
+# Flask app
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    logs = []
     try:
-        with open("intrusion_log.json") as log_file:
-            logs = json.load(log_file)  # Load as a JSON array
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error reading log file: {e}")
+        with open(LOG_FILE) as f:
+            logs = json.load(f)
+    except Exception:
+        logs = []
     return render_template("index.html", logs=logs)
 
+# Trackers
+syn_flood_tracker = {}
+last_email_sent = {}
+blocked_ips = set()
+
+# Log intrusion to file
 def log_intrusion(activity, packet):
-    """Log detected intrusion activity in JSON format."""
     log_entry = {
         "activity": activity,
         "source_ip": packet[IP].src,
         "destination_port": packet[TCP].dport,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
     }
-    # Append the log entry to the JSON array in the file
     try:
-        with open("intrusion_log.json", "r+") as log_file:
-            logs = json.load(log_file)
+        with open(LOG_FILE, "r+") as f:
+            logs = json.load(f)
             logs.append(log_entry)
-            log_file.seek(0)
-            json.dump(logs, log_file)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error writing to log file: {e}")
-    print(log_entry)
+            f.seek(0)
+            json.dump(logs, f, indent=2)
+    except Exception:
+        pass
+    print(f"🔐 Logged: {log_entry['activity']} at {log_entry['timestamp']}")
 
+# Send email alert
 def send_email_alert(activity, packet):
-    """Send an email alert about detected intrusion activity with rate limiting."""
     src_ip = packet[IP].src
-    current_time = time.time()
+    now = time.time()
 
-    if src_ip in last_email_sent and current_time - last_email_sent[src_ip] < ALERT_RATE_LIMIT:
-        return  # Skip sending email to avoid spamming
-
-    last_email_sent[src_ip] = current_time  # Update the last sent time
+    if src_ip in last_email_sent and now - last_email_sent[src_ip] < ALERT_RATE_LIMIT:
+        return
+    last_email_sent[src_ip] = now
 
     try:
-        msg = MIMEText(f"Alert: {activity} detected from {src_ip}")
-        msg["Subject"] = "Intrusion Detection Alert"
+        msg = MIMEText(f"Alert: {activity} from {src_ip}")
+        msg["Subject"] = "IDS Alert"
         msg["From"] = SENDER_EMAIL
         msg["To"] = RECEIVER_EMAIL
 
@@ -78,44 +84,49 @@ def send_email_alert(activity, packet):
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
-        print("Email alert sent.")
+        print(f"📧 Email alert sent for {src_ip}")
     except Exception as e:
-        print(f"Failed to send email alert: {e}")
+        print(f"Email failed: {e}")
 
+# Block IP using iptables
 def block_ip(ip):
-    """Block an IP address using iptables."""
-    os.system(f"sudo iptables -A INPUT -s {ip} -j DROP")
-    print(f"Blocked IP: {ip}")
+    if ip not in blocked_ips:
+        os.system(f"sudo iptables -A INPUT -s {ip} -j DROP")
+        blocked_ips.add(ip)
+        print(f"⛔ Blocked IP: {ip}")
 
-# Dictionary for tracking IPs to detect SYN flood and apply rate limiting
-syn_flood_tracker = {}
-last_email_sent = {}
-
+# Main detection logic
 def detect_intrusion(packet):
-    """Detect suspicious network activity and take appropriate action."""
-    if packet.haslayer(TCP):
+    if packet.haslayer(TCP) and packet.haslayer(IP):
         src_ip = packet[IP].src
-        if packet[TCP].flags == "S":  # SYN flag set
+        if src_ip in WHITELIST_IPS:
+            print(f"🟡 Ignored trusted IP: {src_ip}")
+            return
+
+        if packet[TCP].flags == "S":
             syn_flood_tracker[src_ip] = syn_flood_tracker.get(src_ip, 0) + 1
 
-            # Check for SYN flood threshold
+            if time.time() - last_email_sent.get(src_ip, 0) < 10:
+                return
+
             if syn_flood_tracker[src_ip] >= SYN_FLOOD_THRESHOLD:
-                activity = f"SYN flood detected from {src_ip}"
+                activity = f"SYN flood from {src_ip}"
                 log_intrusion(activity, packet)
                 send_email_alert(activity, packet)
-
-                # Block IP if it exceeds the block threshold
                 if syn_flood_tracker[src_ip] >= BLOCK_THRESHOLD:
                     block_ip(src_ip)
 
+# Sniffing thread
 def start_sniffing():
-    """Start packet sniffing in a separate thread and analyze each packet."""
-    print("Starting Intrusion Detection System...")
-    sniff(prn=detect_intrusion, count=0)
+    print("✅ IDS is monitoring traffic on interface: lo")
+    sniff(prn=detect_intrusion, iface="lo", store=0)
 
+# Start web + IDS
 if __name__ == "__main__":
-    # Run IDS in a separate thread
     threading.Thread(target=start_sniffing).start()
-
-    # Run the Flask app for the dashboard
     app.run(host="0.0.0.0", port=5000)
+
+
+syn_flood_tracker.clear()
+last_email_sent.clear()
+blocked_ips.clear()
